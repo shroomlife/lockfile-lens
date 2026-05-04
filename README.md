@@ -16,6 +16,43 @@ version churn, or the kind of dependency graph surprise that made xz-style attac
 `lockfile-lens` does not claim to detect malicious code. It makes the dependency graph change small
 enough for humans to review again.
 
+## Real-world problems this solves
+
+### "This PR only bumps one direct dependency. Why did 40 packages change?"
+
+Dependency bots and package managers often touch far more than the dependency named in the PR title.
+For product teams, that creates noisy reviews and weak approval evidence: reviewers can see that
+`bun.lock` changed, but not what changed in business terms. `lockfile-lens` turns that lockfile churn
+into a short review artifact: brand-new packages, added versions, removed packages, upgrades, and
+direct vs transitive scope.
+
+### "We need a lightweight supply-chain review gate before buying a platform."
+
+Security teams may already use Dependabot, GitHub Advanced Security, Snyk, Socket, or another SCA
+platform. Those tools are valuable, but early-stage teams and open-source maintainers still need a
+simple, transparent markdown report that works in any CI job and can be pasted into a PR. `lockfile-lens`
+does that without registry credentials, SaaS setup, policy configuration, or a GitHub token with write
+permissions.
+
+### "A new transitive package appeared. Did anyone notice?"
+
+Several well-known supply-chain incidents were not just about vulnerable versions. They were about
+trust boundaries shifting inside dependency graphs. The
+[event-stream incident](https://blog.npmjs.org/post/180565383195/details-about-the-event-stream-incident)
+involved a new malicious transitive dependency. The
+[ua-parser-js compromise](https://github.com/advisories/GHSA-pjwm-rvh2-c87w) shipped malicious npm
+versions of a widely used package. The
+[xz Utils backdoor](https://www.cisa.gov/news-events/alerts/2024/03/29/reported-supply-chain-compromise-affecting-xz-utils-data-compression-library-cve-2024-3094)
+showed how much damage a trusted upstream package can cause. `lockfile-lens` does not detect malware,
+but it gives reviewers a focused place to ask: "Is this new package expected?"
+
+### "Our GitHub Action should work for forks and public repos."
+
+The default integration writes to
+[`$GITHUB_STEP_SUMMARY`](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands),
+so it works with read-only permissions. PR comments are optional and documented separately for
+same-repository pull requests.
+
 ## What it does today
 
 - Parses Bun 1.2+ JSONC `bun.lock` files.
@@ -27,6 +64,22 @@ enough for humans to review again.
   - `version-changed`: a package moved from one resolved version to another.
 - Labels changes as `direct` or `transitive`.
 - Renders markdown to stdout.
+
+## How it compares
+
+`lockfile-lens` is intentionally narrow: it makes Bun lockfile diffs readable. It is not a replacement
+for vulnerability databases, malware analysis, dependency bots, or policy engines.
+
+| Tool | Great for | Where `lockfile-lens` fits |
+|---|---|---|
+| [GitHub Dependency Review](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review) | Reviewing dependency changes with GitHub's dependency graph and security data. | Adds a Bun-first, markdown-only report that can run as a plain CLI in any CI flow. |
+| [Dependabot](https://docs.github.com/en/code-security/dependabot) and [Renovate](https://docs.renovatebot.com/) | Creating dependency update PRs automatically. | Explains what the resulting `bun.lock` diff actually changed. |
+| `bun audit` / `npm audit` | Finding known vulnerabilities from advisory data. | Shows non-vulnerability graph changes, such as brand-new transitive packages. |
+| [Socket](https://socket.dev/) / [Snyk](https://snyk.io/) | Deeper supply-chain intelligence, risk signals, policy, and platform workflows. | Provides a transparent open-source report with no SaaS dependency for the initial review step. |
+| [`lockfile-lint`](https://github.com/lirantal/lockfile-lint) | Enforcing lockfile host/protocol/integrity rules. | Produces a human changelog instead of validating lockfile source policy. |
+
+The best setup is complementary: let bots create update PRs, let SCA tools flag known risk, and use
+`lockfile-lens` to make the lockfile delta reviewable for humans.
 
 ## Quickstart
 
