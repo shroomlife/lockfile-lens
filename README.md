@@ -95,7 +95,7 @@ Use the local CLI directly while developing:
 
 ```sh
 bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock
-bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock --htmlOutput ../../reports/lockfile-lens.html
+bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock --html-output ../../reports/lockfile-lens.html
 ```
 
 After the CLI package is published to npm, run it directly with Bun:
