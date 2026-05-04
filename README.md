@@ -88,18 +88,21 @@ From this repository:
 ```sh
 bun install
 bun run smoke
+bun run smoke:html
 ```
 
 Use the local CLI directly while developing:
 
 ```sh
 bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock
+bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock --htmlOutput ../../reports/lockfile-lens.html
 ```
 
 After the CLI package is published to npm, run it directly with Bun:
 
 ```sh
 bunx lockfile-lens check old.bun.lock new.bun.lock
+bunx lockfile-lens check old.bun.lock new.bun.lock --html-output reports/lockfile-lens.html
 ```
 
 For a pull request workflow, compare the base lockfile with the changed lockfile and post the
@@ -139,10 +142,18 @@ jobs:
         with:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
-      - name: Compare bun.lock
+      - name: Generate lockfile report
         run: |
+          mkdir -p reports
           git show "origin/${{ github.base_ref }}:bun.lock" > "$RUNNER_TEMP/base.bun.lock"
-          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock >> "$GITHUB_STEP_SUMMARY"
+          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock \
+            --html-output reports/lockfile-lens.html >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lockfile-lens-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/lockfile-lens.html
+          if-no-files-found: error
+          retention-days: 14
 ```
 
 For same-repository pull requests, you can also post the report as a PR comment. Keep the summary
@@ -170,9 +181,17 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Generate report
         run: |
+          mkdir -p reports
           git show "origin/${{ github.base_ref }}:bun.lock" > "$RUNNER_TEMP/base.bun.lock"
-          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock > "$RUNNER_TEMP/lockfile-lens.md"
+          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock \
+            --html-output reports/lockfile-lens.html > "$RUNNER_TEMP/lockfile-lens.md"
           cat "$RUNNER_TEMP/lockfile-lens.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lockfile-lens-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/lockfile-lens.html
+          if-no-files-found: error
+          retention-days: 14
       - name: Comment on PR
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:

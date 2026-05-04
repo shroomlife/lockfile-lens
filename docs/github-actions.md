@@ -3,6 +3,7 @@
 `lockfile-lens` is designed to be CI-friendly:
 
 - It reads two files and writes markdown to stdout.
+- It can write a self-contained HTML report for artifact upload in the same command.
 - It exits with `0` when analysis succeeds, even if dependency changes are found.
 - It exits non-zero only for operational errors such as invalid JSONC or unreadable files.
 - It does not need registry credentials for analysis.
@@ -30,16 +31,25 @@ jobs:
         with:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
-      - name: Compare bun.lock
+      - name: Generate lockfile report
         run: |
+          mkdir -p reports
           git show "origin/${{ github.base_ref }}:bun.lock" > "$RUNNER_TEMP/base.bun.lock"
-          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock >> "$GITHUB_STEP_SUMMARY"
+          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock \
+            --html-output reports/lockfile-lens.html >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lockfile-lens-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/lockfile-lens.html
+          if-no-files-found: error
+          retention-days: 14
 ```
 
 ## Optional PR comments
 
 PR comments require `pull-requests: write`. This is convenient for same-repository pull requests,
-but public forks may not receive a writable token. Keep the job summary as the reliable default.
+but public forks may not receive a writable token. Keep the job summary and HTML artifact as the
+reliable default.
 
 ```yaml
 name: Lockfile lens comment
@@ -63,9 +73,17 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Generate report
         run: |
+          mkdir -p reports
           git show "origin/${{ github.base_ref }}:bun.lock" > "$RUNNER_TEMP/base.bun.lock"
-          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock > "$RUNNER_TEMP/lockfile-lens.md"
+          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock \
+            --html-output reports/lockfile-lens.html > "$RUNNER_TEMP/lockfile-lens.md"
           cat "$RUNNER_TEMP/lockfile-lens.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lockfile-lens-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/lockfile-lens.html
+          if-no-files-found: error
+          retention-days: 14
       - name: Comment on PR
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
@@ -79,3 +97,5 @@ jobs:
   `fetch-depth: 0` for the copy/paste workflow.
 - `oven-sh/setup-bun@v2` installs Bun and enables `bunx`.
 - `$GITHUB_STEP_SUMMARY` is GitHub's native markdown summary file for a workflow step.
+- `actions/upload-artifact@v7` uploads the HTML report. For GitHub Enterprise Server, use the
+  artifact action version supported by your GHES release.

@@ -12,9 +12,10 @@
     "check": "bun test && bun run typecheck && bun run biome",
     "format": "biome check --write .",
     "smoke": "bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock",
+    "smoke:html": "bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock --htmlOutput ../../reports/lockfile-lens.html",
     "test": "bun test",
     "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/cli typecheck",
-    "verify": "bun run check && bun run smoke"
+    "verify": "bun run check && bun run smoke && bun run smoke:html"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",
