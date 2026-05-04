@@ -28,16 +28,23 @@ enough for humans to review again.
 - Labels changes as `direct` or `transitive`.
 - Renders markdown to stdout.
 
-## Install and usage
+## Usage
 
-Run it directly with Bun:
+From this repository:
+
+```sh
+bun install
+bun run smoke
+```
+
+After the CLI package is published to npm, run it directly with Bun:
 
 ```sh
 bunx lockfile-lens check old.bun.lock new.bun.lock
 ```
 
-For a pull request workflow, compare the base lockfile with the changed lockfile and post the output
-as a PR comment or CI summary.
+For a pull request workflow, compare the base lockfile with the changed lockfile and post the
+markdown output as a PR comment or CI summary.
 
 ```sh
 bunx lockfile-lens check ./bun.lock.base ./bun.lock
