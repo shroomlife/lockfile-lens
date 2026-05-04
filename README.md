@@ -28,13 +28,19 @@ enough for humans to review again.
 - Labels changes as `direct` or `transitive`.
 - Renders markdown to stdout.
 
-## Usage
+## Quickstart
 
 From this repository:
 
 ```sh
 bun install
 bun run smoke
+```
+
+Use the local CLI directly while developing:
+
+```sh
+bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock
 ```
 
 After the CLI package is published to npm, run it directly with Bun:
@@ -48,6 +54,49 @@ markdown output as a PR comment or CI summary.
 
 ```sh
 bunx lockfile-lens check ./bun.lock.base ./bun.lock
+```
+
+The command exits with `0` when analysis succeeds, even if dependency changes are found. It exits
+non-zero only for operational problems such as unreadable files, invalid JSONC, or unsupported
+lockfile shapes.
+
+## CI integration
+
+The CLI prints markdown to stdout, so it is easy to pipe into CI summaries or PR comments.
+
+```yaml
+name: Lockfile lens
+
+on:
+  pull_request:
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - run: git show origin/${{ github.base_ref }}:bun.lock > /tmp/base.bun.lock
+      - run: bunx lockfile-lens check /tmp/base.bun.lock bun.lock >> "$GITHUB_STEP_SUMMARY"
+```
+
+## Programmatic API
+
+Use `@lockfile-lens/core` when you want to integrate the analysis into another tool without any
+filesystem or CLI behavior.
+
+```ts
+import { analyzeBunLockfileChange } from "@lockfile-lens/core";
+
+const result = analyzeBunLockfileChange(oldLockfileText, newLockfileText);
+
+if (!result.ok) {
+  console.error(result.error);
+} else {
+  console.log(result.value.entries);
+}
 ```
 
 ## Example output
