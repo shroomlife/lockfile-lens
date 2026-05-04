@@ -1,0 +1,29 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "dependencies": {
+        "elysia": "^1.2.12",
+        "kept-direct": "^1.0.0",
+        "new-direct": "^1.0.0",
+      },
+      "devDependencies": {
+        "vitest": "^2.0.0",
+      },
+      "peerDependencies": {
+        "typescript": "^5.6.2",
+      },
+    },
+  },
+  "packages": {
+    "elysia": ["elysia@1.2.12", "", { "dependencies": { "cookie": "^0.7.0" } }, "sha512-new-elysia"],
+    "cookie": ["cookie@0.7.0", "", {}, "sha512-cookie-new"],
+    "existing-helper": ["existing-helper@1.0.0", "", {}, "sha512-existing-old"],
+    "existing-helper@2": ["existing-helper@2.0.0", "", {}, "sha512-existing-new"],
+    "kept-direct": ["kept-direct@1.0.0", "", {}, "sha512-kept"],
+    "new-direct": ["new-direct@1.0.0", "", {}, "sha512-new-direct"],
+    "new-transitive": ["new-transitive@0.4.2", "", {}, "sha512-new-transitive"],
+    "typescript": ["typescript@5.6.2", "", {}, "sha512-typescript"],
+    "vitest": ["vitest@2.0.0", "", {}, "sha512-vitest"],
+  },
+}

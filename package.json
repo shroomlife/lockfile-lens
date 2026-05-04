@@ -1,0 +1,22 @@
+{
+  "name": "lockfile-lens-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "biome": "biome check .",
+    "biome:fix": "biome check --write .",
+    "check": "bun test && bun run typecheck && bun run biome",
+    "smoke": "bun run --cwd packages/cli src/index.ts check ../../examples/old.bun.lock ../../examples/new.bun.lock",
+    "test": "bun test",
+    "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/cli typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.14",
+    "@types/bun": "^1.3.13",
+    "typescript": "^6.0.3"
+  }
+}
