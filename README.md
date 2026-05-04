@@ -63,12 +63,20 @@ lockfile shapes.
 ## CI integration
 
 The CLI prints markdown to stdout, so it is easy to pipe into CI summaries or PR comments.
+This summary-only workflow is the safest default because it works for public repositories and forked
+pull requests without write permissions.
+See [docs/github-actions.md](docs/github-actions.md) for the longer integration guide.
 
 ```yaml
 name: Lockfile lens
 
 on:
   pull_request:
+    paths:
+      - bun.lock
+
+permissions:
+  contents: read
 
 jobs:
   lockfile:
@@ -78,8 +86,45 @@ jobs:
         with:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
-      - run: git show origin/${{ github.base_ref }}:bun.lock > /tmp/base.bun.lock
-      - run: bunx lockfile-lens check /tmp/base.bun.lock bun.lock >> "$GITHUB_STEP_SUMMARY"
+      - name: Compare bun.lock
+        run: |
+          git show "origin/${{ github.base_ref }}:bun.lock" > "$RUNNER_TEMP/base.bun.lock"
+          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock >> "$GITHUB_STEP_SUMMARY"
+```
+
+For same-repository pull requests, you can also post the report as a PR comment. Keep the summary
+step too, so the report is visible even if comment permissions are unavailable.
+
+```yaml
+name: Lockfile lens comment
+
+on:
+  pull_request:
+    paths:
+      - bun.lock
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - name: Generate report
+        run: |
+          git show "origin/${{ github.base_ref }}:bun.lock" > "$RUNNER_TEMP/base.bun.lock"
+          bunx lockfile-lens check "$RUNNER_TEMP/base.bun.lock" bun.lock > "$RUNNER_TEMP/lockfile-lens.md"
+          cat "$RUNNER_TEMP/lockfile-lens.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment on PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/lockfile-lens.md"
 ```
 
 ## Programmatic API
