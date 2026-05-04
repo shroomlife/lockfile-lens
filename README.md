@@ -204,7 +204,15 @@ if (!result.ok) {
 
 Compared `examples/old.bun.lock` -> `examples/new.bun.lock`.
 
-### Summary
+### Review focus
+
+This lockfile update changes **6 package entries**.
+Start with **2 brand-new package names**, because each one creates a new dependency trust relationship.
+Then review **2 direct dependency changes**, because these came from workspace declarations.
+Finally confirm **1 removed package entry** is expected.
+No registry calls were made; this report is based only on the two lockfiles.
+
+### Change totals
 
 | Change | Direct | Transitive | Total |
 |---|---:|---:|---:|
@@ -212,6 +220,20 @@ Compared `examples/old.bun.lock` -> `examples/new.bun.lock`.
 | Added | 0 | 1 | 1 |
 | Removed | 0 | 1 | 1 |
 | Version changed | 1 | 1 | 2 |
+
+### Reviewer checklist
+
+- Brand-new packages expected: review required.
+- Direct dependency changes expected: review required.
+- Transitive dependency churn understood: review recommended.
+- Removals expected: review required.
+
+### Highest-signal changes
+
+| Focus area | Why it matters | Count | Packages |
+|---|---|---:|---|
+| Brand-new direct packages | New direct dependency trust relationship | 1 | `new-direct` |
+| Brand-new transitive packages | New transitive dependency trust relationship | 1 | `new-transitive` |
 ```
 
 ## Architecture
